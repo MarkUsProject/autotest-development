@@ -1,0 +1,15 @@
+[submodule "autotest-plugin-postgresql"]
+	path = plugins/autotest-plugin-postgresql
+	url = git@github.com:mishaschwartz/autotest-plugin-postgresql.git
+[submodule "autotest-tester-python"]
+	path = testers/autotest-tester-python
+	url = git@github.com:mishaschwartz/autotest-tester-python.git
+[submodule "autotest-api"]
+	path = autotest-api
+	url = git@github.com:mishaschwartz/autotest-api.git
+[submodule "autotest-backend-classic"]
+	path = autotest-backend-classic
+	url = git@github.com:mishaschwartz/autotest-backend-classic.git
+[submodule "autotest-backend-docker"]
+	path = autotest-backend-docker
+	url = git@github.com:mishaschwartz/autotest-backend-docker.git

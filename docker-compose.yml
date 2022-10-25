@@ -1,0 +1,86 @@
+services:
+  api:
+    build:
+      context: autotest-api
+      target: dev
+    image: markus-autotest-api-dev:1.0.0
+    container_name: autotest-api
+    volumes:
+      - ./autotest-api:/app:cached
+    environment:
+      - REDIS_URL=redis://redis:6379/
+      - FLASK_HOST=0.0.0.0
+    ports:
+      - '5000:5000'
+    depends_on:
+      - redis
+    networks:
+      - default
+      - markus_dev
+  backend-classic:
+    build:
+      context: autotest-backend-classic
+      dockerfile: ./.dockerfiles/Dockerfile
+      args:
+        LOGIN_USER: 'docker'
+        WORKSPACE: '/home/docker/.autotesting'
+    image: autotest-backend-classic-dev:1.0.0
+    volumes:
+      - ./autotest-backend-classic:/app:cached
+      - workspace:/home/docker/.autotesting
+    environment:
+      - REDIS_URL=redis://redis:6379/
+      - WORKSPACE=/home/docker/.autotesting
+      - SUPERVISOR_URL=127.0.0.1:9001
+      - AUTOTESTER_CONFIG=/app/.dockerfiles/docker-config.yml
+    depends_on:
+      - redis
+      - api
+  backend-docker:
+    build:
+      context: autotest-backend-docker
+      target: dev
+    image: autotest-backend-docker-dev:1.0.0
+    volumes:
+      - ./autotest-backend-docker:/app:cached
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - REDIS_URL=redis://redis:6379/
+      - REGISTRY_URL=localhost:5001
+    depends_on:
+      - redis
+      - api
+      - registry
+    deploy:
+      replicas: 2
+  registry:
+    image: registry:2.8.1
+    environment:
+      - REGISTRY_HTTP_ADDR=0.0.0.0:5001
+    volumes:
+      - registry:/var/lib/registry
+    ports:
+      - '5001:5001'
+  redis:
+    image: redis:7.0.5-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - 6379
+  rq_dashboard:
+    image: eoranged/rq-dashboard
+    environment:
+      - RQ_DASHBOARD_REDIS_URL=redis://redis:6379/
+    ports:
+      - '9181:9181'
+    depends_on:
+      - redis
+
+volumes:
+  redis_data:
+  workspace:
+  registry:
+
+networks:
+  markus_dev:
+    name: markus_dev
