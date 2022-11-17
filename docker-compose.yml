@@ -17,26 +17,29 @@ services:
     networks:
       - default
       - markus_dev
-  backend-classic:
+  backend_classic:
     build:
       context: autotest-backend-classic
-      dockerfile: ./.dockerfiles/Dockerfile
+      target: dev
       args:
-        LOGIN_USER: 'docker'
-        WORKSPACE: '/home/docker/.autotesting'
+        - ADDITIONAL_REQUIREMENTS=postgresql-client libpq-dev python3-venv
     image: autotest-backend-classic-dev:1.0.0
     volumes:
-      - ./autotest-backend-classic:/app:cached
-      - workspace:/home/docker/.autotesting
+      - ./autotest-backend-classic:/app
+      - workspace:/workspace
+      - ./testers:/testers
+      - ./plugins:/plugins
     environment:
       - REDIS_URL=redis://redis:6379/
-      - WORKSPACE=/home/docker/.autotesting
-      - SUPERVISOR_URL=127.0.0.1:9001
       - AUTOTESTER_CONFIG=/app/.dockerfiles/docker-config.yml
+      - PGHOST=postgres
+      - PGUSER=docker
+      - PGPASSWORD=docker
     depends_on:
       - redis
       - api
-  backend-docker:
+      - postgres
+  backend_docker:
     build:
       context: autotest-backend-docker
       target: dev
@@ -44,6 +47,8 @@ services:
     volumes:
       - ./autotest-backend-docker:/app:cached
       - /var/run/docker.sock:/var/run/docker.sock
+      - ./testers:/testers
+      - ./plugins:/plugins
     environment:
       - REDIS_URL=redis://redis:6379/
       - REGISTRY_URL=localhost:5001
@@ -67,6 +72,11 @@ services:
       - redis_data:/data
     ports:
       - 6379
+  postgres:
+    image: postgres:12.11
+    environment:
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_USER=docker
   rq_dashboard:
     image: eoranged/rq-dashboard
     environment:
